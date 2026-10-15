@@ -124,6 +124,42 @@ body {
   @apply font-mono break-all;
 }
 
+/* Syntax + diff colors (CodeBlock). Tuned per theme for contrast on --card-2. */
+:root {
+  --syn-keyword: #8a3ffc;
+  --syn-type: #0a7f82;
+  --syn-fn: #1f5fbf;
+  --syn-string: #a3561b;
+  --syn-number: #b5367a;
+  --syn-comment: #7e8e9a;
+  --diff-add-bg: rgba(21, 160, 90, 0.045);
+  --diff-add-fg: #11804a;
+  --diff-del-bg: rgba(200, 55, 47, 0.04);
+  --diff-del-fg: #c8372f;
+}
+.dark {
+  --syn-keyword: #c49bff;
+  --syn-type: #5fe9eb;
+  --syn-fn: #82aaff;
+  --syn-string: #f0b37e;
+  --syn-number: #f78fc0;
+  --syn-comment: #6b7c88;
+  --diff-add-bg: rgba(21, 160, 90, 0.07);
+  --diff-add-fg: #4ade80;
+  --diff-del-bg: rgba(240, 96, 90, 0.06);
+  --diff-del-fg: #f0605a;
+}
+.syn-keyword { color: var(--syn-keyword); }
+.syn-type { color: var(--syn-type); }
+.syn-fn { color: var(--syn-fn); }
+.syn-string { color: var(--syn-string); }
+.syn-number { color: var(--syn-number); }
+.syn-comment { color: var(--syn-comment); font-style: italic; }
+.diff-add { background: var(--diff-add-bg); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--diff-add-fg) 45%, transparent); }
+.diff-add > span:first-child { color: color-mix(in srgb, var(--diff-add-fg) 75%, transparent); }
+.diff-del { background: var(--diff-del-bg); box-shadow: inset 2px 0 0 color-mix(in srgb, var(--diff-del-fg) 40%, transparent); }
+.diff-del > span:first-child { color: color-mix(in srgb, var(--diff-del-fg) 70%, transparent); }
+
 @keyframes shimmer {
   from {
     background-position: -200% 0;

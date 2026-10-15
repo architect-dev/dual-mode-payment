@@ -27,23 +27,24 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-bg/80 backdrop-blur">
       <div className="mx-auto flex max-w-[58rem] items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/" className="flex shrink-0 items-center gap-3">
           <img src={dark ? logoOnDark : logoOnLight} alt="Fhenix" className="h-5" />
           <span className="h-4 w-px bg-line-strong" />
           <span className="whitespace-nowrap font-display text-[15px] font-medium tracking-tight">Dual Mode</span>
         </Link>
         <div className="flex items-center gap-2">
           <span className="hidden text-xs text-muted sm:inline">Arbitrum Sepolia</span>
-          <button className="btn-ghost px-3" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+          <button className="btn-ghost px-3 max-sm:py-2" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
             {dark ? "☀" : "☾"}
           </button>
           {!isConnected ? (
             <button
-              className="btn-primary"
+              className="btn-primary max-sm:px-3.5 max-sm:py-2"
               disabled={isPending}
               onClick={() => connect({ connector: connectors[0], chainId: chain.id })}
             >
-              Connect wallet
+              <span className="sm:hidden">Connect</span>
+              <span className="hidden sm:inline">Connect wallet</span>
             </button>
           ) : wrongChain ? (
             <button className="btn-accent" onClick={() => switchChain({ chainId: chain.id })}>

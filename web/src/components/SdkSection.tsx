@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card } from "./ui";
+import { CodeBlock } from "./CodeBlock";
 
 const SNIPPETS = {
   Encrypt: `const [amount, proof] = await cofhe
@@ -38,15 +39,13 @@ export function SdkSection() {
           <button
             key={k}
             onClick={() => setTab(k)}
-            className={`rounded-md px-4 py-1.5 text-[14px] transition ${tab === k ? "bg-fg text-bg" : "text-subtle hover:text-fg"}`}
+            className={`whitespace-nowrap rounded-md px-4 py-1.5 text-[14px] transition ${tab === k ? "bg-fg text-bg" : "text-subtle hover:text-fg"}`}
           >
             {k}
           </button>
         ))}
       </div>
-      <pre className="mt-4 overflow-x-auto rounded-xl border border-line bg-card-2 p-5 font-mono text-[14px] leading-relaxed text-fg">
-        {SNIPPETS[tab]}
-      </pre>
+      <CodeBlock code={SNIPPETS[tab]} lang="ts" />
     </Card>
   );
 }

@@ -3,6 +3,7 @@ import { WalletStrip } from "../components/WalletCard";
 import { Convert } from "../components/Convert";
 import { Pay } from "../components/Pay";
 import { SdkSection } from "../components/SdkSection";
+import { BuildSection } from "../components/BuildSection";
 import { arbiscan, INDICATOR, INDICATOR_SYMBOL, NAME, SOURCE_COMMIT, SYMBOL, TOKEN } from "../config";
 
 export function Home() {
@@ -25,6 +26,7 @@ export function Home() {
         <Pay />
         <Convert />
         <SdkSection />
+        <BuildSection />
       </div>
 
       <footer className="mt-12 border-t border-line pt-6 text-[14px] text-muted">

@@ -1,33 +1,37 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAccount, useWalletClient } from "wagmi";
 import { parseUnits, type Hex } from "viem";
 import { DECIMALS, INDICATOR, INDICATOR_DECIMALS, INDICATOR_SYMBOL, SYMBOL, TOKEN } from "../config";
 import { useCofhe } from "../lib/cofhe";
-import { fmt, fmtIndicator } from "../lib/format";
+import { fmt } from "../lib/format";
 import { ZERO_HANDLE, errMsg, useSend, useWalletState } from "../lib/token";
 import { saveTx } from "../lib/snapshots";
 import { Spinner, TxLink } from "./ui";
+import { IndicatorValue } from "./Indicator";
 
-/** Decrypts the connected account's private balance whenever its handle changes. */
-export function usePrivateBalance(handle?: Hex) {
+/**
+ * The connected account's decrypted private balance. Shared via react-query (keyed by handle),
+ * so every component reading it triggers a single decryption per balance change.
+ */
+export function usePrivateBalance() {
+  const { address } = useAccount();
   const { ready, hasPermit, decrypt } = useCofhe();
-  const [state, setState] = useState<{ value?: bigint; ms?: number; loading: boolean; error?: string }>({
-    loading: false,
+  const { data: w } = useWalletState(address);
+  const handle = w?.privateHandle;
+  const q = useQuery({
+    queryKey: ["privateBalance", handle],
+    queryFn: async () => (handle === ZERO_HANDLE ? { value: 0n } : { value: (await decrypt(handle!)).value }),
+    enabled: !!handle && (handle === ZERO_HANDLE || (ready && hasPermit)),
+    staleTime: Infinity,
+    retry: 1,
   });
-  useEffect(() => {
-    if (!handle) return;
-    if (handle === ZERO_HANDLE) return setState({ value: 0n, loading: false });
-    if (!ready || !hasPermit) return setState({ loading: false });
-    let cancelled = false;
-    setState((s) => ({ ...s, loading: true }));
-    decrypt(handle)
-      .then((r) => !cancelled && setState({ value: r.value, ms: r.elapsedMs, loading: false }))
-      .catch((e) => !cancelled && setState({ loading: false, error: errMsg(e) }));
-    return () => {
-      cancelled = true;
-    };
-  }, [handle, ready, hasPermit, decrypt]);
-  return state;
+  return {
+    handle,
+    value: q.data?.value,
+    loading: q.isFetching && !q.data,
+    error: q.error ? errMsg(q.error) : undefined,
+  };
 }
 
 /** Horizontal balance strip: the three numbers that matter, plus faucet and add-to-wallet. */
@@ -36,7 +40,7 @@ export function WalletStrip() {
   const { data: walletClient } = useWalletClient();
   const { ready, hasPermit, ensurePermit } = useCofhe();
   const { data: w } = useWalletState(address);
-  const priv = usePrivateBalance(w?.privateHandle);
+  const priv = usePrivateBalance();
   const send = useSend();
   const [faucet, setFaucet] = useState<{ busy: boolean; hash?: Hex; error?: string }>({ busy: false });
   const [permitBusy, setPermitBusy] = useState(false);
@@ -102,7 +106,11 @@ export function WalletStrip() {
             )
           }
         />
-        <Tile label={`${INDICATOR_SYMBOL} indicator`} caption="activity counter, not value" value={fmtIndicator(w?.indicated)} />
+        <Tile
+          label={`${INDICATOR_SYMBOL} indicator`}
+          caption="counts confidential activity, never amounts"
+          value={<IndicatorValue value={w?.indicated} />}
+        />
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-5">

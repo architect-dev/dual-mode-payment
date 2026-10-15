@@ -18,8 +18,9 @@ import { readClient } from "../lib/wagmi";
 import { readWalletState, ZERO_HANDLE, errMsg, type WalletState } from "../lib/token";
 import { loadTx } from "../lib/snapshots";
 import { useCofhe } from "../lib/cofhe";
-import { fmt, fmtIndicator, ms, short } from "../lib/format";
+import { fmt, ms, short } from "../lib/format";
 import { Addr, Badge, Card, ExtLink, Hash, SectionTitle, Spinner } from "../components/ui";
+import { IndicatorValue, Marker, MarkerLegend } from "../components/Indicator";
 
 const POOL = "0x1011000000000000000000000000000000000000";
 const eq = (a?: string, b?: string) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
@@ -155,6 +156,7 @@ export function TxPage() {
         </div>
       </header>
 
+      {(hasConfidential || d.indicatorLogs.length > 0) && <MarkerLegend />}
       <ExplorerView d={d} n={num()} />
       {hasConfidential && <DecryptPanel d={d} n={num()} />}
       <WalletView d={d} n={num()} />
@@ -204,7 +206,7 @@ function ExplorerView({ d, n }: { d: Loaded; n: string }) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="font-mono">
-                      {indicator ? fmtIndicator(a.value) : fmt(a.value)} {indicator ? INDICATOR_SYMBOL : SYMBOL}
+                      {indicator ? <IndicatorValue value={a.value} /> : fmt(a.value)} {indicator ? INDICATOR_SYMBOL : SYMBOL}
                     </span>
                     {indicator ? <Badge>indicator</Badge> : <Badge tone="leak">real amount</Badge>}
                   </div>
@@ -216,7 +218,7 @@ function ExplorerView({ d, n }: { d: Loaded; n: string }) {
         {isPrivate && (
           <p className="mt-3 leading-relaxed text-subtle">
             No {SYMBOL} moves on the public ledger. The only token transfer is the {INDICATOR_SYMBOL} indicator, and it is
-            always <span className="font-mono text-fg">1,011,000.0001</span>, whatever amount was sent.
+            always <IndicatorValue value={10110000001n} />, whatever amount was sent.
           </p>
         )}
       </Block>
@@ -436,6 +438,12 @@ function DecryptPanel({ d, n }: { d: Loaded; n: string }) {
             )}
           </p>
         )}
+        {state.value === 0n && (
+          <p className="mt-4 rounded-lg border border-accent-line bg-accent-bg/50 p-4 text-[14px] leading-relaxed text-subtle">
+            Decrypted to <b className="text-fg">0</b>. The sender asked for more than their balance, so the encrypted select
+            moved nothing. To everyone else, this transaction is indistinguishable from a real payment.
+          </p>
+        )}
         {state.error && <p className="mt-3 text-[14px] text-danger">Refused: {state.error}</p>}
       </div>
     </Card>
@@ -457,7 +465,13 @@ function WalletView({ d, n }: { d: Loaded; n: string }) {
       <SectionTitle
         n={n}
         title="What the wallets show"
-        sub={`In MetaMask or Rabby, a dual-mode token shows as two rows: the real public ${SYMBOL} balance, and the ${INDICATOR_SYMBOL} indicator, which ticks by one for each confidential operation.`}
+        sub={
+          <>
+            In MetaMask or Rabby, a dual-mode token shows up as two rows: <b className="text-fg">{SYMBOL}</b>, your real
+            public balance, and <b className="text-fg">{INDICATOR_SYMBOL}</b>, the <Marker /> indicator. It never shows
+            an amount; it only tells the wallet that something confidential happened.
+          </>
+        }
       />
       <div className={`grid gap-4 ${d.wallets.length > 1 ? "md:grid-cols-2" : ""}`}>
         {d.wallets.map((w) => (
@@ -495,8 +509,8 @@ function WalletPanel({ w, role }: { w: Loaded["wallets"][number]; role: string }
       />
       <TokenRow
         symbol={INDICATOR_SYMBOL}
-        before={w.before && fmtIndicator(w.before.indicated)}
-        after={w.after ? fmtIndicator(w.after.indicated) : "—"}
+        before={w.before && <IndicatorValue value={w.before.indicated} />}
+        after={w.after ? <IndicatorValue value={w.after.indicated} /> : "—"}
         changed={!!w.before && !!w.after && w.before.indicated !== w.after.indicated}
         note={indicatorNote(w.before?.indicated, w.after?.indicated)}
       />
@@ -519,8 +533,8 @@ function TokenRow({
   note,
 }: {
   symbol: string;
-  before?: string;
-  after: string;
+  before?: ReactNode;
+  after: ReactNode;
   changed: boolean;
   note?: string;
 }) {

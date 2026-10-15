@@ -2,7 +2,17 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { Encryptable, EncryptStep } from "@cofhe/sdk";
-import { encodeFunctionData, erc20Abi, isAddress, parseEventLogs, parseUnits, type Address, type Hex } from "viem";
+import {
+  encodeFunctionData,
+  erc20Abi,
+  getAddress,
+  isAddress,
+  parseEventLogs,
+  parseUnits,
+  toHex,
+  type Address,
+  type Hex,
+} from "viem";
 import { dualUsdAbi } from "../generated/abis";
 import { DECIMALS, SYMBOL, TOKEN } from "../config";
 import { cofhe, useCofhe } from "../lib/cofhe";
@@ -10,6 +20,7 @@ import { fmt, short } from "../lib/format";
 import { errMsg, readWalletState, useSend } from "../lib/token";
 import { saveTx } from "../lib/snapshots";
 import { Badge, Card, Hash, SectionTitle, Spinner, Timeline, useSteps, type StepStatus } from "./ui";
+import { usePrivateBalance } from "./WalletCard";
 
 const ENCRYPT_STEPS: { key: EncryptStep; label: string }[] = [
   { key: EncryptStep.InitTfhe, label: "init" },
@@ -27,6 +38,7 @@ export function Pay() {
   const { address } = useAccount();
   const { ensurePermit, decrypt } = useCofhe();
   const send = useSend();
+  const priv = usePrivateBalance();
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("250");
   const [busy, setBusy] = useState(false);
@@ -48,6 +60,7 @@ export function Pay() {
     }
   }, [amount]);
   const recipient = (isAddress(to) ? to : PLACEHOLDER_TO) as Address;
+  const overBalance = priv.value != null && units > priv.value;
 
   const run = async () => {
     if (!address || !isAddress(to)) return;
@@ -106,12 +119,16 @@ export function Pay() {
       t.done(
         "verify",
         d.elapsedMs,
-        <>
-          <span className="font-mono">{short(amountHandle, 10, 6)}</span> →{" "}
-          <b className="text-fg">
-            {fmt(d.value)} {SYMBOL}
-          </b>
-        </>,
+        d.value === 0n && units > 0n ? (
+          <ZeroTransferNote requested={units} />
+        ) : (
+          <>
+            <span className="font-mono">{short(amountHandle, 10, 6)}</span> →{" "}
+            <b className="text-fg">
+              {fmt(d.value)} {SYMBOL}
+            </b>
+          </>
+        ),
       );
 
       const after = {
@@ -150,9 +167,19 @@ export function Pay() {
         <div>
           <label className="label" htmlFor="pay-to">Recipient</label>
           <input id="pay-to" className="input mt-2" placeholder="0x…" value={to} onChange={(e) => setTo(e.target.value.trim())} />
-          <p className="mt-2 text-[13px] text-muted">
-            Use a second account in your wallet, so you can switch to it afterwards and decrypt as the receiver.
-          </p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <p className="text-[13px] text-muted">
+              Use a second account in your wallet, so you can switch to it afterwards and decrypt as the receiver.
+            </p>
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              onClick={() => setTo(getAddress(toHex(crypto.getRandomValues(new Uint8Array(20)))))}
+              title="A fresh address nobody controls: you'll only see the sender's side"
+            >
+              Use a random address
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <div className="w-44">
@@ -163,6 +190,16 @@ export function Pay() {
             {busy ? <Spinner /> : null} Encrypt & send privately
           </button>
         </div>
+        {overBalance && (
+          <div className="rounded-xl border border-accent-line bg-accent-bg/50 p-4 text-[14px] leading-relaxed text-subtle">
+            <b className="text-fg">
+              This is more than your private balance ({fmt(priv.value)} {SYMBOL}).
+            </b>{" "}
+            The transfer will still go through and will look identical on-chain: the same event, a new ctHash, the same{" "}
+            cdUSD tick. The contract can't see your balance or the amount, so it can't reject the transfer. It compares
+            them encrypted and moves <b className="text-fg">0</b> instead. Send it to see.
+          </div>
+        )}
         {error && <p className="text-[14px] text-danger">{error}</p>}
       </div>
 
@@ -283,6 +320,23 @@ function CallRow({ title, badge, fn, fields }: { title: string; badge: ReactNode
         </div>
         <div className="text-fg">)</div>
       </div>
+    </div>
+  );
+}
+
+/** Shown when the sender decrypts the transferred amount and it is 0: the encrypted select chose 0. */
+function ZeroTransferNote({ requested }: { requested: bigint }) {
+  return (
+    <div className="mt-1 rounded-lg border border-accent-line bg-accent-bg/50 p-4 leading-relaxed">
+      <div className="font-medium text-fg">
+        Requested {fmt(requested)} {SYMBOL}, moved 0.00 {SYMBOL}.
+      </div>
+      <p className="mt-1.5">
+        The contract computed <code className="font-mono text-fg">success = balance ≥ amount</code> on encrypted values,
+        then <code className="font-mono text-fg">transferred = FHE.select(success, amount, 0)</code>. Neither the
+        contract nor any node learns which branch was taken. Both balances still get new ciphertext handles, exactly as
+        in a real transfer. Only you and the receiver, by decrypting the ctHash, find out that nothing moved.
+      </p>
     </div>
   );
 }

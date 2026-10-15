@@ -1,0 +1,9 @@
+{
+  "chainId": 421614,
+  "deployer": "0xFb07b270C3688fa6c0126d995dE2ad7d375E86Dd",
+  "deployBlock": 319423879,
+  "lib": "0xb61ab64EBf2DB7b02C95C0149b0c6cebb505a6A6",
+  "token": "0x3d08f142fCAcEcd108243BAD9c97eF6351dEd92e",
+  "indicator": "0x540B17853aeDDcAb531Ea95e34430251182e366d",
+  "sourceCommit": "bc27798ce11ae4b8be70af95ccec4183ac7f4d82"
+}

@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/* Palette lifted from TGE-platform's fUSD theme (apps/stablecoin/src/styles/fusd-theme.css),
+   dark variant. Exposed as Tailwind colors via @theme. */
+/* Palette from TGE-platform's fUSD theme (apps/stablecoin/src/styles/fusd-theme.css).
+   Light is the default; `.dark` on <html> flips it. Utilities resolve the vars at use site. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Clash Display", "Geist", sans-serif;
+
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-on-accent: var(--on-accent);
+  --color-accent-bg: var(--accent-bg);
+  --color-accent-line: var(--accent-line);
+  --color-positive: var(--positive);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-leak: var(--leak);
+}
+
+:root {
+  color-scheme: light;
+  --bg: #f2f5f7;
+  --card: #ffffff;
+  --card-2: #f6f8f9;
+  --fg: #0a1722;
+  --muted: #7e8e9a;
+  --subtle: #45596a;
+  --line: #e9edef;
+  --line-strong: #dfe5e8;
+  --accent: #0a9396;
+  --accent-strong: #087274;
+  --on-accent: #ffffff;
+  --accent-bg: #e3fafb;
+  --accent-line: #c2f0f2;
+  --positive: #15a05a;
+  --warn: #b7791f;
+  --danger: #d63d3d;
+  --leak: #c8372f;
+  --glow: rgba(10, 217, 220, 0.12);
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: #070a0d;
+  --card: #0d1318;
+  --card-2: #111a21;
+  --fg: #f1f5f7;
+  --muted: #6b7c88;
+  --subtle: #9fb0bc;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.13);
+  --accent: #0ad9dc;
+  --accent-strong: #5fe9eb;
+  --on-accent: #070a0d;
+  --accent-bg: #082a2c;
+  --accent-line: #155a5c;
+  --positive: #15a05a;
+  --warn: #e8a33d;
+  --danger: #d63d3d;
+  --leak: #f0605a;
+  --glow: rgba(10, 217, 220, 0.09);
+}
+
+@font-face {
+  font-family: "Clash Display";
+  src: url("./assets/fonts/clash-display-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Clash Display";
+  src: url("./assets/fonts/clash-display-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+
+/* Sized for screen sharing: 15px body, nothing the audience must read below 13px. */
+body {
+  @apply bg-bg text-fg font-sans text-[15px] antialiased;
+  background-image: radial-gradient(60rem 30rem at -10% -10%, var(--glow), transparent 60%);
+  background-attachment: fixed;
+}
+
+@utility card {
+  @apply rounded-2xl border border-line bg-card;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-[15px] font-medium whitespace-nowrap transition
+    disabled:cursor-not-allowed disabled:border-transparent disabled:bg-line-strong disabled:text-muted;
+}
+@utility btn-primary {
+  @apply btn bg-fg text-bg hover:opacity-90;
+}
+@utility btn-accent {
+  @apply btn bg-accent text-on-accent hover:bg-accent-strong;
+}
+@utility btn-ghost {
+  @apply btn border border-line-strong text-fg hover:bg-fg/5;
+}
+@utility btn-sm {
+  @apply px-3.5 py-2 text-[13px];
+}
+@utility input {
+  @apply w-full rounded-lg border border-line-strong bg-card px-3.5 py-3 font-mono text-[15px] outline-none
+    focus:border-accent;
+}
+@utility label {
+  @apply text-[12px] font-medium uppercase tracking-[0.1em] text-muted;
+}
+@utility mono-break {
+  @apply font-mono break-all;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+.cipher {
+  background: linear-gradient(90deg, var(--accent-strong) 0%, var(--accent) 30%, var(--subtle) 50%, var(--accent) 70%, var(--accent-strong) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}

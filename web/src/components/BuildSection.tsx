@@ -98,7 +98,7 @@ export function BuildSection() {
     <Card>
       <SectionTitle
         n="04"
-        title="Make any ERC-20 dual-mode"
+        title="Build"
         sub="The confidential mode is a layer, not a separate token. The public ERC-20 keeps working exactly as before; the layer adds an encrypted balance for every holder alongside it."
       />
 
